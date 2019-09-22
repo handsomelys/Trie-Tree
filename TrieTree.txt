@@ -14,18 +14,18 @@ using namespace std;
 
             
                                                                                                                              
-*/    
+*/
 class TrieNode
 {
 public:
-    int count;
-    bool isword;
-    TrieNode *child[26];
+    int count;           //统计节点出现次数
+    bool isword;         //判断是否构成一个单词
+    TrieNode *child[26]; //一个结点延申出最多26个节点（26个字母）
 
 public:
-    TrieNode(char word = 0)
+    TrieNode(char word = 0) //构建函数
     {
-        isword = false;
+        isword = false; //初始化
         count = 1;
         memset(child, 0, sizeof(child));
     }
@@ -33,46 +33,48 @@ public:
 class TrieTree
 {
 private:
-    TrieNode *Root;
+    TrieNode *Root; //根节点
 
 public:
-    TrieTree()
+    TrieTree() //构建函数
     {
-        Root = new TrieNode();
+        Root = new TrieNode(); //初始化 分配一个TrieNode空间
     }
-    ~TrieTree()
+    ~TrieTree() //析构函数
     {
-        destroy_Tree(Root);
+        cout << "this tree is destroy" << endl;
+        destroy_Tree(Root); //调用摧毁树的那个函数
     }
 
-    void insert_item(string str)
+    void insert_item(string str) //插入函数 将string插入至Trie树里
     {
-        if (Root == NULL || str.length() == 0)
+        //参数为需要存入trie树里的单词（字符串）
+        if (Root == NULL || str.length() == 0) //如果节点为空 或传入的字符串为空
         {
             return;
         }
         TrieNode *T = Root;
         string L = str;
-        bool isupdate = false;
-        for (char c : L)
+        for (char c : L) //将遍历字符串为一个个字符
         {
-            if (T->child[c - 'a'] != NULL)
+            if (T->child[c - 'a'] != NULL) //如果该节点存在该字符的子节点存在，则该子节点的count计数+1
             {
                 T = T->child[c - 'a'];
                 T->count++;
             }
             else
             {
-                TrieNode *temp = new TrieNode();
-                T->child[c - 'a'] = temp;
+                TrieNode *temp = new TrieNode(); //如果不存在 申请一个新的节点空间
+                T->child[c - 'a'] = temp;        //对应索引的节点插入这个新分配空间的节点
                 T = T->child[c - 'a'];
             }
         }
         T->isword = true;
     }
 
-    bool search_item(string str)
+    bool search_item(string str) //查找单词是否存在
     {
+        //参数为需要存入trie树里的单词（字符串）
         if (Root == NULL || str.length() == 0)
         {
             cout << "NULL" << endl;
@@ -80,16 +82,17 @@ public:
         }
         TrieNode *T = Root;
 
-        for (char c : str)
+        for (char c : str) //通过拆分字符串 分成一个个字符在树的节点查找
         {
             if (T != NULL)
                 T = T->child[c - 'a'];
         }
-        return (T && T->isword);
+        return (T && T->isword); //如果最后的节点不为空 且遍历的字符可构成单词则返回true
     }
 
-    bool pri_search_item(string str)
+    bool pri_search_item(string str) //查找字符的前缀 原理跟上一个查找单词的函数差不多 只是return的判断条件少了一个判断是否构成单词
     {
+        //参数为需要存入trie树里的单词（字符串）
         if (Root == NULL || str.length() == 0)
         {
             printf("NULL\n");
@@ -106,51 +109,21 @@ public:
         }
         return (T != NULL);
     }
-    void destroy_Tree(TrieNode *Root)
+    void destroy_Tree(TrieNode *Root) //摧毁整棵树
     {
+
         for (int i = 0; i < 26; i++)
         {
             if (Root->child[i] != NULL)
-                destroy_Tree(Root->child[i]);
+                destroy_Tree(Root->child[i]); //递归调用该函数
         }
         free(Root);
     }
 
-    int pri_num(string str)
+    bool p_isone(TrieNode *child[]) //判断该节点是否只有一个子节点
     {
-        if (!Root || str.length() == 0)
-            return 0;
-        if (!pri_search_item(str))
-            return 0;
-        TrieNode *T = Root;
-        for (char c : str)
-        {
-            if (T)
-            {
-                T = T->child[c - 'a'];
-            }
-        }
-        if (T)
-            return T->count;
-        return 0;
-    }
-
-    TrieNode *getNode(string str, int k)
-    {
-        TrieNode *T = Root;
-        for (char c : str)
-        {
-            if (k-- == 0)
-                break;
-            if (!T)
-                T = T->child[c - 'a'];
-        }
-        return T;
-    }
-
-    bool p_isone(TrieNode *child[])
-    {
-        int numberofpoint = 0;
+        //参数为需要存入trie树里的单词（字符串）
+        int numberofpoint = 0; //统计该节点出现次数
         for (int i = 0; i < 26; i++)
         {
             if (child[i] != NULL)
@@ -161,113 +134,132 @@ public:
         return numberofpoint == 1 ? true : false;
     }
 
-    bool del_item(string str)
+    bool del_item(string str) //删除单词（删除元素）
     {
-        TrieNode *detach = NULL;
-        TrieNode *detachparent = NULL;
+        //参数为需要存入trie树里的单词（字符串）
+        TrieNode *detach = NULL;       //临时存储要删除的节点
+        TrieNode *detachparent = NULL; //临时存储要删除节点的子节点
         int detachpoint = -1;
-        TrieNode *p = Root;
+        TrieNode *T = Root;
         int index = 0;
-        for (int i = 0; i < str.length(); i++)
+        for (int i = 0; i < str.length(); i++) //挨个遍历 假如发现不存在该单词 直接return false
         {
             index = str.at(i) - 'a';
-            if (p->child[index] == NULL)
+            if (T->child[index] == NULL)
             {
                 return false;
             }
-            if (!p_isone(p->child))
+            if (!p_isone(T->child)) //如果该节点不止一个子节点
             {
-                detachparent = p;
-                detach = p->child[index];
+                detachparent = T; //用临时变量记录一下
+                detach = T->child[index];
                 detachpoint = i;
             }
-            if (detachpoint != -1)
+            if (detachpoint != -1) //如果记录了要删除的节点
             {
-                if (p->count != 0)
+                if (T->count != 0) //如果这个字母出现不止一次
                 {
-                    detachparent = p;
-                    detach = p->child[index];
+                    detachparent = T; //记录
+                    detach = T->child[index];
                     detachpoint = i;
                 }
             }
-            p = p->child[index];
+            T = T->child[index];
         }
-        if (detachpoint == str.length() - 1)
+        if (detachpoint == str.length() - 1) //如果恰是最后一个节点
         {
-            if (p->count != 0)
+            if (T->count != 0)
             {
                 for (int i = 0; i < 26; i++)
                 {
-                    if (p->child[i] != NULL)
+                    if (T->child[i] != NULL)
                     {
-                        p->count = 0;
+                        T->count = 0; //存在的节点的count计数置为0 视为删除
                         return true;
                     }
                 }
             }
         }
-        TrieNode *temp = detach;
-        detachparent->child[str.at(detachpoint) - 'a'] = NULL;
-        for (int i = detachpoint + 1; i < str.length(); i++)
+        TrieNode *temp = detach;                               //临时变量存储要删除的节点
+        detachparent->child[str.at(detachpoint) - 'a'] = NULL; //定位到该字母所在位置 指针设为null
+        for (int i = detachpoint + 1; i < str.length(); i++)   //定位
         {
-            index = str.at(i) - 'a';
-            temp = detach->child[index];
+            index = str.at(i) - 'a';     //索引
+            temp = detach->child[index]; //临时存储 这里的删除操作是数据结构所学的链表的删除
             delete detach;
             detach = temp;
         }
         delete detach;
         return true;
     }
-    int frequency(string str)
+    int frequency(string str) //统计词频
     {
+        //参数为需要存入trie树里的单词（字符串）
         TrieNode *T = Root;
-        int id;
+        int index;
         for (char c : str)
         {
-            id = c - 'a';
-            T = T->child[id];
+            index = c - 'a';
+            T = T->child[index];
             if (!T)
                 return 0;
         }
-        return T->count;
+        return T->count; //返回输入字符串的词频
     }
 };
 
-main()
+typedef pair<string,int> p;
+
+bool cmpvalue(p& x, p& y)
 {
-    TrieTree tree;
-    string str;
+    return x.second>y.second;
+}
+struct cmpbyvalue
+{
+    bool operator()(p& x, p& y)
+    {
+        return x.second>y.second;
+    }
+};
+
+main() 
+{
+    TrieTree tree;  //创建TrieTree类实例
+    string str; //存放单词的string 类实例
     cout << "please init a TrieTree" << endl;
-    int num;
+    int num;    //一开始建立的树的规模
     cout << "please input the size of this TrieTree" << endl;
     cin >> num;
     cout << "please input the words that you want to save in the tree" << endl;
+    set<string> words;
+    vector<int> fre;
+    map<string,int> freq;
     for (int i = 0; i < num; i++)
     {
 
         cin >> str;
-        tree.insert_item(str);
+        words.insert(str);
+        tree.insert_item(str);  //调用插入单词方法 将字符串插入树中
     }
     string base = "cao";
     tree.insert_item(base);
     cout << "completed!" << endl;
     cout << "what operation you want to do?" << endl;
-    cout << "0、 exit and destroy the whole tree " << endl;
-    cout << "1、 search the words" << endl;
-    cout << "2、 delete some words" << endl;
-    cout << "3、 insert some words into the trie tree" << endl;
-    cout << "4、 statistical word frequency " << endl;
-    int flag;
+    cout << "0、 exit and destroy the whole tree " << endl; //开关0 退出程序 摧毁trie树
+    cout << "1、 search the words" << endl; //开关1 输入字符串 判断该字符串是否是存在tire树里的单词 或某单词的前缀
+    cout << "2、 delete some words" << endl;    // 开关2 删除树中的某单词        
+    cout << "3、 insert some words into the trie tree" << endl; //开关3 插入某单词到树中
+    cout << "4、 statistical word frequency " << endl;  //开关4  统计字符串在树中的词频
+    int flag;   //开关变量 用于选择功能
     cout << "make your choice" << endl;
     cin >> flag;
     while (1)
     {
         if (flag == 0)
         {
-            
+
             cout << "The tree will be destroyed..." << endl;
-            //tree.~TrieTree();
-            cout << "Good bye";
+            cout << "Good bye"<<endl;
             return 0;
         }
 
@@ -293,7 +285,11 @@ main()
             cout << "please input the words that you want to del" << endl;
             cin >> str;
             if (tree.del_item(str))
+            {
+                words.erase(str);
                 cout << "These words are del" << endl;
+            }
+                
             else
                 cout << "These words can not be del, please try again" << endl;
         }
@@ -306,14 +302,39 @@ main()
             for (int i = 0; i < n; i++)
             {
                 cin >> str;
+                words.insert(str);
                 tree.insert_item(str);
             }
         }
         else if (flag == 4)
         {
+            /*
             cout << "please input the words that you want to know its frequency" << endl;
             cin >> str;
             cout << tree.frequency(str) << endl;
+            
+
+            for(set<string>::iterator it=words.begin();it!=words.end();it++)
+            {
+                fre.push_back(tree.frequency(*it));
+            }
+            sort(fre.begin(),fre.end());
+            for(vector<int>::iterator it=fre.begin();it!=fre.end();it++)
+            {
+                cout<<*it<<endl;
+            }
+            */
+            for(set<string>::iterator it=words.begin();it!=words.end();it++)
+            {
+                freq.insert(pair<string,int>(*it,tree.frequency(*it)));
+            }
+            vector<p> Freq(freq.begin(),freq.end());
+            sort(Freq.begin(),Freq.end(),cmpbyvalue());
+            for(int i=0;i!=Freq.size();i++)
+            {
+                cout<<Freq[i].first<<":"<<Freq[i].second<<endl;
+            }
+            
         }
         cout << "please continue your choice" << endl;
         cin >> flag;
